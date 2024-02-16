@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bildschirmübertragung per Bluetooth</title>
+</head>
+<body>
+    <h1>Bildschirmübertragung per Bluetooth</h1>
+    <p>
+        Diese Website ermöglicht es Ihnen, Ihren Bildschirm mit einem anderen Gerät per Bluetooth zu verbinden.
+    </p>
+    <div id="uebertragungsflaeche"></div>
+    <button id="bluetooth-verbinden">Mit Bluetooth verbinden</button>
+
+    <script>
+        const uebertragungsflaeche = document.getElementById("uebertragungsflaeche");
+const bluetoothVerbindenButton = document.getElementById("bluetooth-verbinden");
+
+bluetoothVerbindenButton.addEventListener("click", async () => {
+    // Bluetooth-Geräte scannen
+    const devices = await navigator.bluetooth.requestDevice({
+        filters: [{ services: ["00001101-0000-1000-8000-00805f9b34fb"] }],
+    });
+
+    // Verbindung zum Gerät herstellen
+    const gattServer = await devices.gatt.connect();
+
+    // Service und Charakteristik finden
+    const service = await gattServer.getPrimaryService("00001101-0000-1000-8000-00805f9b34fb");
+    const characteristic = await service.getCharacteristic("00001102-0000-1000-8000-00805f9b34fb");
+
+    // Benachrichtigungen für die Charakteristik aktivieren
+    characteristic.startNotifications().then(() => {
+        // Datenempfang aus der Charakteristik
+        characteristic.addEventListener("characteristicvaluechanged", (event) => {
+            // Bilddaten in der Übertragungsfläche anzeigen
+            const bilddaten = event.target.value;
+            uebertragungsflaeche.innerHTML = `<img src="${bilddaten}" />`;
+        });
+    });
+});
+
+    </script>
+</body>
+</html>
